@@ -226,7 +226,7 @@
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-l'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="h-4 w-4 rotate-180 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -235,12 +235,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M11 17l-5-5m0 0l5-5m-5 5h12"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-b'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="h-4 w-4 rotate-90 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -249,12 +249,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M19 13l-7 7-7-7m14-6l-7 7-7-7"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-t'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="h-4 w-4 -rotate-90 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -263,12 +263,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M5 11l7-7 7 7M5 18l7-7 7 7"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-tr'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="h-4 w-4 rotate-45 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -277,12 +277,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M7 7h10M7 7v10M7 7l10 10"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-tl'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="h-4 w-4 -rotate-45 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -291,12 +291,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M17 7h-10M17 7v10M17 7L7 17"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-br'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="rotate-135 h-4 w-4 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -305,12 +305,12 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M17 17h-10M17 17v-10M17 17L7 7"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{:else if direction.class === 'bg-gradient-to-bl'}
 											<svg
-												class="h-4 w-4 text-blue-500"
+												class="-rotate-135 h-4 w-4 text-blue-500"
 												viewBox="0 0 24 24"
 												fill="none"
 												stroke="currentColor"
@@ -319,16 +319,11 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M7 17h10M7 17v-10M7 17l10-10"
+													d="M13 7l5 5m0 0l-5 5m5-5H6"
 												/>
 											</svg>
 										{/if}
 									</div>
-									<span
-										class="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-gray-600 opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										{direction.name}
-									</span>
 								</button>
 							{/each}
 						</div>
