@@ -516,12 +516,11 @@
 					Play
 				</button>
 				<button
-					class="flex items-center gap-1 rounded bg-green-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 {isRecording ||
-					isDownloading
-						? 'cursor-not-allowed opacity-50'
-						: 'hover:bg-green-600'}"
+					class="flex items-center gap-1 rounded bg-green-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500"
 					on:click={() => startRecording('gif')}
-					disabled={isRecording || isDownloading}
+					style="pointer-events: {isRecording || isDownloading
+						? 'none'
+						: 'auto'}; opacity: {isRecording || isDownloading ? '0.5' : '1'}"
 				>
 					{#if isRecording && recordingType === 'gif'}
 						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -556,12 +555,11 @@
 					{/if}
 				</button>
 				<button
-					class="flex items-center gap-1 rounded bg-purple-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 {isRecording ||
-					isDownloading
-						? 'cursor-not-allowed opacity-50'
-						: 'hover:bg-purple-600'}"
+					class="flex items-center gap-1 rounded bg-purple-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
 					on:click={() => startRecording('mp4')}
-					disabled={isRecording || isDownloading}
+					style="pointer-events: {isRecording || isDownloading
+						? 'none'
+						: 'auto'}; opacity: {isRecording || isDownloading ? '0.5' : '1'}"
 				>
 					{#if isRecording && recordingType === 'mp4'}
 						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
