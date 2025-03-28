@@ -11,6 +11,34 @@
 	);
 	let fpsElement: HTMLElement;
 
+	const solidColors = [
+		{ name: 'Red', class: 'text-red-500' },
+		{ name: 'Blue', class: 'text-blue-500' },
+		{ name: 'Green', class: 'text-green-500' },
+		{ name: 'Purple', class: 'text-purple-500' },
+		{ name: 'Yellow', class: 'text-yellow-500' },
+		{ name: 'Pink', class: 'text-pink-500' }
+	];
+
+	const gradients = [
+		{
+			name: 'Blue to Purple',
+			class: 'bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent'
+		},
+		{
+			name: 'Red to Yellow',
+			class: 'bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent'
+		},
+		{
+			name: 'Green to Blue',
+			class: 'bg-gradient-to-r from-green-500 to-blue-500 bg-clip-text text-transparent'
+		},
+		{
+			name: 'Purple to Pink',
+			class: 'bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent'
+		}
+	];
+
 	onMount(() => {
 		console.log('Animation started');
 		const duration = 2000; // 2 seconds
@@ -62,7 +90,7 @@
 
 	<div class="w-96 border-l border-gray-200 p-6">
 		<h2 class="mb-4 text-xl font-semibold">Animation Controls</h2>
-		<div class="space-y-4">
+		<div class="space-y-6">
 			<div>
 				<label for="text" class="mb-1 block text-sm font-medium text-gray-700">
 					Text Style Classes
@@ -74,6 +102,34 @@
 					class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
 					placeholder="Enter Tailwind classes (e.g. text-red-500 or bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent)"
 				/>
+			</div>
+
+			<div>
+				<h3 class="mb-2 text-sm font-medium text-gray-700">Solid Colors</h3>
+				<div class="grid grid-cols-3 gap-2">
+					{#each solidColors as color}
+						<button
+							class="rounded border border-gray-200 px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50"
+							on:click={() => textClass.set(color.class)}
+						>
+							<span class={color.class}>{color.name}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+
+			<div>
+				<h3 class="mb-2 text-sm font-medium text-gray-700">Gradients</h3>
+				<div class="grid grid-cols-2 gap-2">
+					{#each gradients as gradient}
+						<button
+							class="rounded border border-gray-200 px-3 py-2 text-sm font-medium shadow-sm hover:bg-gray-50"
+							on:click={() => textClass.set(gradient.class)}
+						>
+							<span class={gradient.class}>{gradient.name}</span>
+						</button>
+					{/each}
+				</div>
 			</div>
 		</div>
 	</div>
