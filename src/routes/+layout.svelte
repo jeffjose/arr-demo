@@ -28,9 +28,9 @@
 	};
 
 	let keyframes = $state<Keyframe[]>([
-		{ value: 120, holdTime: 0, transitionDuration: 2000 }, // Start at max refresh rate
-		{ value: 60, holdTime: 0, transitionDuration: 1000 }, // Significant slowdown
-		{ value: 30, holdTime: 0, transitionDuration: 2000 }, // Further slowdown
+		{ value: 120, holdTime: 0, transitionDuration: 1000 }, // Start at max refresh rate
+		{ value: 60, holdTime: 200, transitionDuration: 1500 }, // Significant slowdown with hold
+		{ value: 30, holdTime: 200, transitionDuration: 2500 }, // Further slowdown with hold
 		{ value: 1, holdTime: 0, transitionDuration: 200 } // Final settling
 	]);
 
@@ -46,7 +46,20 @@
 		| 'sine'
 		| 'circ'
 		| 'expo'
-	>('cubic');
+		| 'easeInExpo'
+		| 'easeOutExpo'
+		| 'easeInOutExpo'
+		| 'easeInBack'
+		| 'easeOutBack'
+		| 'easeInOutBack'
+		| 'easeInQuad'
+		| 'easeOutQuad'
+		| 'easeInOutQuad'
+		| 'easeInQuart'
+		| 'easeOutQuart'
+		| 'easeInOutQuart',
+		(t: number) => number
+	>('easeOutExpo');
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
@@ -86,7 +99,19 @@
 		| 'cubic'
 		| 'sine'
 		| 'circ'
-		| 'expo',
+		| 'expo'
+		| 'easeInExpo'
+		| 'easeOutExpo'
+		| 'easeInOutExpo'
+		| 'easeInBack'
+		| 'easeOutBack'
+		| 'easeInOutBack'
+		| 'easeInQuad'
+		| 'easeOutQuad'
+		| 'easeInOutQuad'
+		| 'easeInQuart'
+		| 'easeOutQuart'
+		| 'easeInOutQuart',
 		(t: number) => number
 	> = {
 		linear: (t: number) => t,
@@ -108,7 +133,35 @@
 		cubic: (t: number) => t * t * t,
 		sine: (t: number) => 1 - Math.cos((t * Math.PI) / 2),
 		circ: (t: number) => 1 - Math.sqrt(1 - t * t),
-		expo: (t: number) => (t === 0 ? 0 : Math.pow(2, 10 * t - 10))
+		expo: (t: number) => (t === 0 ? 0 : Math.pow(2, 10 * t - 10)),
+		// New easing functions
+		easeInExpo: (t: number) => (t === 0 ? 0 : Math.pow(2, 10 * t - 10)),
+		easeOutExpo: (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+		easeInOutExpo: (t: number) => {
+			if (t === 0) return 0;
+			if (t === 1) return 1;
+			if (t < 0.5) return Math.pow(2, 20 * t - 10) / 2;
+			return (2 - Math.pow(2, -20 * t + 10)) / 2;
+		},
+		easeInBack: (t: number) => {
+			const c1 = 1.70158;
+			return c1 * t * t * t - c1 * t * t;
+		},
+		easeOutBack: (t: number) => {
+			const c1 = 1.70158;
+			return 1 + c1 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+		},
+		easeInOutBack: (t: number) => {
+			const c2 = 2.5949095;
+			if (t < 0.5) return (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2;
+			return (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
+		},
+		easeInQuad: (t: number) => t * t,
+		easeOutQuad: (t: number) => t * (2 - t),
+		easeInOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
+		easeInQuart: (t: number) => t * t * t * t,
+		easeOutQuart: (t: number) => 1 - Math.pow(1 - t, 4),
+		easeInOutQuart: (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2)
 	};
 
 	function getTotalDuration() {
