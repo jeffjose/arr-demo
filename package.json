@@ -38,5 +38,9 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"gif.js": "^0.2.0",
+		"html2canvas": "^1.4.1"
 	}
 }

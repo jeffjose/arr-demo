@@ -2,6 +2,8 @@
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
+	import html2canvas from 'html2canvas';
+	import GIF from 'gif.js';
 
 	let { children } = $props();
 
@@ -12,6 +14,11 @@
 	let fpsElement: HTMLElement;
 	let activeTab = $state('gradient');
 	let animationFrameId: number;
+	let isRecording = $state(false);
+	let recordedFrames: ImageData[] = [];
+	let mediaRecorder: MediaRecorder | null = null;
+	let recordedChunks: Blob[] = [];
+	let recordingType: 'gif' | 'mp4' = 'gif';
 
 	// Animation state
 	let isPlaying = $state(true);
@@ -223,13 +230,123 @@
 
 			fps.set(Math.round(currentValue));
 			progress = getOverallProgress(currentTime);
+
+			// Capture frame if recording
+			if (isRecording && fpsElement) {
+				html2canvas(fpsElement, {
+					backgroundColor: null,
+					scale: 2, // Higher quality
+					useCORS: true,
+					allowTaint: true
+				}).then((canvas) => {
+					const ctx = canvas.getContext('2d');
+					if (ctx) {
+						recordedFrames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+					}
+				});
+			}
+
 			animationFrameId = requestAnimationFrame(animate);
 		} else {
 			// We're at the last frame
 			fps.set(currentFrame.value);
 			progress = 1;
 			isPlaying = false;
+
+			// Stop recording and create GIF/MP4
+			if (isRecording) {
+				isRecording = false;
+				if (recordingType === 'gif') {
+					createGif();
+				} else {
+					createMp4();
+				}
+			}
 		}
+	}
+
+	async function createGif() {
+		if (!fpsElement || recordedFrames.length === 0) return;
+
+		const gif = new GIF({
+			workers: 4,
+			quality: 10,
+			width: fpsElement.offsetWidth * 2,
+			height: fpsElement.offsetHeight * 2,
+			workerScript: '/gif.worker.js'
+		});
+
+		// Add frames to GIF
+		recordedFrames.forEach((frame) => {
+			const canvas = document.createElement('canvas');
+			canvas.width = frame.width;
+			canvas.height = frame.height;
+			const ctx = canvas.getContext('2d');
+			if (ctx) {
+				ctx.putImageData(frame, 0, 0);
+				gif.addFrame(canvas, { delay: 1000 / 60 }); // 60fps
+			}
+		});
+
+		gif.on('finished', (blob: Blob) => {
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'animation.gif';
+			a.click();
+			URL.revokeObjectURL(url);
+		});
+
+		gif.render();
+	}
+
+	async function createMp4() {
+		if (!fpsElement || recordedFrames.length === 0) return;
+
+		const canvas = document.createElement('canvas');
+		canvas.width = fpsElement.offsetWidth * 2;
+		canvas.height = fpsElement.offsetHeight * 2;
+		const ctx = canvas.getContext('2d');
+
+		if (!ctx) return;
+
+		const stream = canvas.captureStream(60); // 60fps
+		mediaRecorder = new MediaRecorder(stream, {
+			mimeType: 'video/webm;codecs=vp9',
+			videoBitsPerSecond: 5000000 // 5Mbps
+		});
+
+		mediaRecorder.ondataavailable = (event) => {
+			if (event.data.size > 0) {
+				recordedChunks.push(event.data);
+			}
+		};
+
+		mediaRecorder.onstop = () => {
+			const blob = new Blob(recordedChunks, { type: 'video/webm' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'animation.webm';
+			a.click();
+			URL.revokeObjectURL(url);
+			recordedChunks = [];
+		};
+
+		mediaRecorder.start();
+		let frameIndex = 0;
+
+		const drawFrame = () => {
+			if (frameIndex < recordedFrames.length) {
+				ctx.putImageData(recordedFrames[frameIndex], 0, 0);
+				frameIndex++;
+				requestAnimationFrame(drawFrame);
+			} else {
+				mediaRecorder?.stop();
+			}
+		};
+
+		drawFrame();
 	}
 
 	function togglePlayPause() {
@@ -254,6 +371,16 @@
 		pausedTime = 0;
 		fps.set(keyframes[0].value);
 		isPlaying = false;
+	}
+
+	function startRecording(type: 'gif' | 'mp4') {
+		// Reset and start recording
+		resetAnimation();
+		isRecording = true;
+		recordingType = type;
+		recordedFrames = [];
+		startTime = performance.now();
+		animationFrameId = requestAnimationFrame(animate);
 	}
 
 	function restartAnimation() {
@@ -346,26 +473,58 @@
 	<div class="w-1/4 border-l border-gray-200 p-4">
 		<div class="mb-4 flex items-center justify-between">
 			<h2 class="text-sm font-semibold text-gray-700">Animation</h2>
-			<button
-				class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-				on:click={restartAnimation}
-			>
-				<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-					/>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg>
-				Play
-			</button>
+			<div class="flex gap-2">
+				<button
+					class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+					on:click={restartAnimation}
+				>
+					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+						/>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					Play
+				</button>
+				<button
+					class="flex items-center gap-1 rounded bg-green-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500"
+					on:click={() => startRecording('gif')}
+					disabled={isRecording}
+				>
+					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+						/>
+					</svg>
+					GIF
+				</button>
+				<button
+					class="flex items-center gap-1 rounded bg-purple-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
+					on:click={() => startRecording('mp4')}
+					disabled={isRecording}
+				>
+					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+						/>
+					</svg>
+					MP4
+				</button>
+			</div>
 		</div>
 
 		<!-- Animation Controls -->
