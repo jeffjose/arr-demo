@@ -36,9 +36,18 @@
 	]);
 
 	// Animation configuration
-	let easingFunction = $state<'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic'>(
-		'linear'
-	);
+	let easingFunction = $state<
+		| 'linear'
+		| 'easeIn'
+		| 'easeOut'
+		| 'easeInOut'
+		| 'bounce'
+		| 'elastic'
+		| 'cubic'
+		| 'sine'
+		| 'circ'
+		| 'expo'
+	>('easeInOut');
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
@@ -69,7 +78,16 @@
 
 	// Easing functions
 	const easingFunctions: Record<
-		'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic',
+		| 'linear'
+		| 'easeIn'
+		| 'easeOut'
+		| 'easeInOut'
+		| 'bounce'
+		| 'elastic'
+		| 'cubic'
+		| 'sine'
+		| 'circ'
+		| 'expo',
 		(t: number) => number
 	> = {
 		linear: (t: number) => t,
@@ -87,7 +105,11 @@
 		elastic: (t: number) => {
 			const c4 = (2 * Math.PI) / 3;
 			return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
-		}
+		},
+		cubic: (t: number) => t * t * t,
+		sine: (t: number) => 1 - Math.cos((t * Math.PI) / 2),
+		circ: (t: number) => 1 - Math.sqrt(1 - t * t),
+		expo: (t: number) => (t === 0 ? 0 : Math.pow(2, 10 * t - 10))
 	};
 
 	function getTotalDuration() {
