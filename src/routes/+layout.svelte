@@ -13,6 +13,20 @@
 	let activeTab = $state('gradient');
 	let animationFrameId: number;
 
+	// Animation state
+	let isPlaying = $state(true);
+	let progress = $state(0);
+	let startTime: number;
+	let pausedTime = 0;
+
+	// Animation configuration
+	let duration = $state(2000); // 2 seconds
+	let startValue = $state(120);
+	let endValue = $state(0);
+	let easingFunction = $state<'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic'>(
+		'linear'
+	);
+
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
 		{ name: 'Blue', class: 'text-blue-500', bg: 'bg-blue-500' },
@@ -40,6 +54,76 @@
 	let fromColor = colors[1]; // blue
 	let toColor = colors[3]; // purple
 
+	// Easing functions
+	const easingFunctions: Record<
+		'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic',
+		(t: number) => number
+	> = {
+		linear: (t: number) => t,
+		easeIn: (t: number) => t * t,
+		easeOut: (t: number) => t * (2 - t),
+		easeInOut: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
+		bounce: (t: number) => {
+			const n1 = 7.5625;
+			const d1 = 2.75;
+			if (t < 1 / d1) return n1 * t * t;
+			if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75;
+			if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375;
+			return n1 * (t -= 2.625 / d1) * t + 0.984375;
+		},
+		elastic: (t: number) => {
+			const c4 = (2 * Math.PI) / 3;
+			return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+		}
+	};
+
+	function animate(currentTime: number) {
+		if (!startTime) startTime = currentTime;
+		const elapsed = currentTime - startTime + pausedTime;
+		progress = Math.min(elapsed / duration, 1);
+
+		const easedProgress = easingFunctions[easingFunction](progress);
+		const currentValue = startValue + (endValue - startValue) * easedProgress;
+		fps.set(Math.round(currentValue));
+
+		if (progress < 1) {
+			animationFrameId = requestAnimationFrame(animate);
+		} else {
+			isPlaying = false;
+		}
+	}
+
+	function togglePlayPause() {
+		if (isPlaying) {
+			if (animationFrameId) {
+				cancelAnimationFrame(animationFrameId);
+			}
+			pausedTime = performance.now() - startTime;
+		} else {
+			startTime = performance.now();
+			animationFrameId = requestAnimationFrame(animate);
+		}
+		isPlaying = !isPlaying;
+	}
+
+	function resetAnimation() {
+		if (animationFrameId) {
+			cancelAnimationFrame(animationFrameId);
+		}
+		progress = 0;
+		startTime = 0;
+		pausedTime = 0;
+		fps.set(startValue);
+		isPlaying = false;
+	}
+
+	function restartAnimation() {
+		resetAnimation();
+		isPlaying = true;
+		startTime = performance.now();
+		animationFrameId = requestAnimationFrame(animate);
+	}
+
 	function updateGradient() {
 		textClass.set(
 			`${selectedDirection.class} from-${fromColor.bg.split('-')[1]}-500 to-${toColor.bg.split('-')[1]}-500 bg-clip-text text-transparent`
@@ -48,43 +132,6 @@
 
 	function setSolidColor(color: (typeof colors)[0]) {
 		textClass.set(color.class);
-	}
-
-	function restartAnimation() {
-		// Cancel any existing animation
-		if (animationFrameId) {
-			cancelAnimationFrame(animationFrameId);
-		}
-
-		console.log('Animation restarted');
-		const duration = 2000; // 2 seconds
-		const startTime = performance.now();
-		const totalSteps = 120; // We want to show all numbers from 120 to 0
-		const stepDuration = duration / totalSteps;
-		console.log('Step duration:', stepDuration, 'ms');
-
-		function animate(currentTime: number) {
-			const elapsed = currentTime - startTime;
-			const currentStep = Math.floor(elapsed / stepDuration);
-
-			if (currentStep <= totalSteps) {
-				fps.set(120 - currentStep);
-				console.log(
-					'Current FPS:',
-					120 - currentStep,
-					'Step:',
-					currentStep,
-					'Elapsed:',
-					elapsed.toFixed(2),
-					'ms'
-				);
-				animationFrameId = requestAnimationFrame(animate);
-			} else {
-				console.log('Animation completed');
-			}
-		}
-
-		animationFrameId = requestAnimationFrame(animate);
 	}
 
 	// Initialize gradient on mount
@@ -365,6 +412,120 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Animation Controls (Always visible) -->
+			<div class="border-t border-gray-200 pt-4">
+				<h3 class="mb-3 text-xs font-medium text-gray-700">Animation</h3>
+				<div class="space-y-4">
+					<!-- Animation State Controls -->
+					<div class="flex items-center justify-between">
+						<button
+							class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							on:click={togglePlayPause}
+						>
+							{#if isPlaying}
+								<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								Pause
+							{:else}
+								<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+									/>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
+								Play
+							{/if}
+						</button>
+						<button
+							class="flex items-center gap-1 rounded bg-gray-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-500"
+							on:click={resetAnimation}
+						>
+							<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+								/>
+							</svg>
+							Reset
+						</button>
+					</div>
+
+					<!-- Progress Bar -->
+					<div class="h-1.5 rounded-full bg-gray-200">
+						<div
+							class="h-full rounded-full bg-blue-500 transition-all duration-100"
+							style="width: {progress * 100}%"
+						/>
+					</div>
+
+					<!-- Animation Parameters -->
+					<div class="space-y-3">
+						<div>
+							<label class="mb-1 block text-xs font-medium text-gray-700">Duration (ms)</label>
+							<input
+								type="range"
+								min="500"
+								max="5000"
+								step="100"
+								bind:value={duration}
+								class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
+							/>
+							<div class="mt-1 text-xs text-gray-500">{duration}ms</div>
+						</div>
+
+						<div>
+							<label class="mb-1 block text-xs font-medium text-gray-700">Start Value</label>
+							<input
+								type="number"
+								min="0"
+								max="120"
+								bind:value={startValue}
+								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							/>
+						</div>
+
+						<div>
+							<label class="mb-1 block text-xs font-medium text-gray-700">End Value</label>
+							<input
+								type="number"
+								min="0"
+								max="120"
+								bind:value={endValue}
+								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							/>
+						</div>
+
+						<div>
+							<label class="mb-1 block text-xs font-medium text-gray-700">Easing</label>
+							<select
+								bind:value={easingFunction}
+								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+							>
+								{#each Object.keys(easingFunctions) as easing}
+									<option value={easing}>{easing}</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
 
 			<!-- Custom Input (Collapsible) -->
 			<div class="border-t border-gray-200 pt-2">
