@@ -11,6 +11,7 @@
 	);
 	let fpsElement: HTMLElement;
 	let activeTab = $state('gradient');
+	let animationFrameId: number;
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
@@ -36,8 +37,8 @@
 	];
 
 	let selectedDirection = gradientDirections[0];
-	let fromColor = colors[0];
-	let toColor = colors[1];
+	let fromColor = colors[1]; // blue
+	let toColor = colors[3]; // purple
 
 	function updateGradient() {
 		textClass.set(
@@ -49,8 +50,13 @@
 		textClass.set(color.class);
 	}
 
-	onMount(() => {
-		console.log('Animation started');
+	function restartAnimation() {
+		// Cancel any existing animation
+		if (animationFrameId) {
+			cancelAnimationFrame(animationFrameId);
+		}
+
+		console.log('Animation restarted');
 		const duration = 2000; // 2 seconds
 		const startTime = performance.now();
 		const totalSteps = 120; // We want to show all numbers from 120 to 0
@@ -72,13 +78,24 @@
 					elapsed.toFixed(2),
 					'ms'
 				);
-				requestAnimationFrame(animate);
+				animationFrameId = requestAnimationFrame(animate);
 			} else {
 				console.log('Animation completed');
 			}
 		}
 
-		requestAnimationFrame(animate);
+		animationFrameId = requestAnimationFrame(animate);
+	}
+
+	// Initialize gradient on mount
+	onMount(() => {
+		updateGradient();
+		restartAnimation();
+		return () => {
+			if (animationFrameId) {
+				cancelAnimationFrame(animationFrameId);
+			}
+		};
 	});
 </script>
 
@@ -99,7 +116,29 @@
 	</div>
 
 	<div class="w-64 border-l border-gray-200 p-4">
-		<h2 class="mb-3 text-sm font-semibold text-gray-700">Style</h2>
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="text-sm font-semibold text-gray-700">Style</h2>
+			<button
+				class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+				on:click={restartAnimation}
+			>
+				<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+					/>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				Play
+			</button>
+		</div>
 		<div class="space-y-3">
 			<!-- Tabs -->
 			<div class="border-b border-gray-200">
@@ -136,7 +175,10 @@
 				<div class="grid grid-cols-4 gap-0.5">
 					{#each colors as color}
 						<button
-							class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300"
+							class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 {$textClass ===
+							color.class
+								? 'ring-1 ring-blue-500'
+								: ''}"
 							on:click={() => setSolidColor(color)}
 						>
 							<div class="h-full w-full rounded {color.bg}"></div>
