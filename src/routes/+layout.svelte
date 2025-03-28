@@ -29,9 +29,9 @@
 
 	let keyframes = $state<Keyframe[]>([
 		{ value: 120, holdTime: 0, transitionDuration: 500 },
-		{ value: 90, holdTime: 20, transitionDuration: 500 },
-		{ value: 60, holdTime: 20, transitionDuration: 500 },
-		{ value: 30, holdTime: 20, transitionDuration: 500 },
+		{ value: 90, holdTime: 50, transitionDuration: 500 },
+		{ value: 60, holdTime: 50, transitionDuration: 500 },
+		{ value: 30, holdTime: 50, transitionDuration: 500 },
 		{ value: 1, holdTime: 0, transitionDuration: 500 }
 	]);
 
@@ -47,7 +47,7 @@
 		| 'sine'
 		| 'circ'
 		| 'expo'
-	>('easeInOut');
+	>('easeOut');
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
