@@ -29,10 +29,10 @@
 
 	let keyframes = $state<Keyframe[]>([
 		{ value: 120, holdTime: 0, transitionDuration: 500 },
-		{ value: 90, holdTime: 100, transitionDuration: 500 },
-		{ value: 75, holdTime: 100, transitionDuration: 500 },
-		{ value: 30, holdTime: 100, transitionDuration: 500 },
-		{ value: 24, holdTime: 0, transitionDuration: 500 }
+		{ value: 90, holdTime: 20, transitionDuration: 500 },
+		{ value: 60, holdTime: 20, transitionDuration: 500 },
+		{ value: 30, holdTime: 20, transitionDuration: 500 },
+		{ value: 1, holdTime: 0, transitionDuration: 500 }
 	]);
 
 	// Animation configuration
@@ -242,6 +242,22 @@
 			position += keyframes[i].holdTime + keyframes[i].transitionDuration;
 		}
 		return position / getTotalDuration();
+	}
+
+	function getPathString() {
+		let path = `M 0,${100 - (keyframes[0].value / 120) * 100}`;
+
+		// Add lines to each keyframe
+		for (let i = 1; i < keyframes.length; i++) {
+			path += ` L ${getKeyframePosition(i) * 100},${100 - (keyframes[i].value / 120) * 100}`;
+		}
+
+		// Add line to current position if we're between keyframes
+		if (progress > 0 && progress < 1) {
+			path += ` L ${progress * 100},${100 - ($fps / 120) * 100}`;
+		}
+
+		return path;
 	}
 
 	// Initialize gradient on mount
