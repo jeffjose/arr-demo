@@ -28,9 +28,9 @@
 	};
 
 	let keyframes = $state<Keyframe[]>([
-		{ value: 120, holdTime: 0, transitionDuration: 1200 }, // Start at max refresh rate
+		{ value: 120, holdTime: 0, transitionDuration: 2000 }, // Start at max refresh rate
 		{ value: 60, holdTime: 0, transitionDuration: 1000 }, // Significant slowdown
-		{ value: 15, holdTime: 0, transitionDuration: 1000 }, // Almost stopped
+		{ value: 30, holdTime: 0, transitionDuration: 2000 }, // Further slowdown
 		{ value: 1, holdTime: 0, transitionDuration: 200 } // Final settling
 	]);
 
