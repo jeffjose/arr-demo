@@ -18,11 +18,24 @@
 	let progress = $state(0);
 	let startTime: number;
 	let pausedTime = 0;
+	let currentKeyframeIndex = $state(0);
+
+	// Keyframe type and default keyframes
+	type Keyframe = {
+		value: number;
+		holdTime: number; // Time to hold at this keyframe in ms
+	};
+
+	let keyframes = $state<Keyframe[]>([
+		{ value: 120, holdTime: 0 },
+		{ value: 90, holdTime: 500 },
+		{ value: 75, holdTime: 500 },
+		{ value: 30, holdTime: 500 },
+		{ value: 24, holdTime: 0 }
+	]);
 
 	// Animation configuration
 	let duration = $state(2000); // 2 seconds
-	let startValue = $state(120);
-	let endValue = $state(0);
 	let easingFunction = $state<'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic'>(
 		'linear'
 	);
@@ -77,18 +90,59 @@
 		}
 	};
 
+	function getTotalDuration() {
+		return keyframes.reduce((total, frame, index) => {
+			const isLast = index === keyframes.length - 1;
+			return total + frame.holdTime + (isLast ? 0 : duration);
+		}, 0);
+	}
+
+	function getCurrentKeyframeProgress(currentTime: number) {
+		let elapsed = currentTime - startTime + pausedTime;
+		let totalProgress = 0;
+		let currentKeyframeStartTime = 0;
+
+		// Find which keyframe we're in and calculate progress
+		for (let i = 0; i < keyframes.length - 1; i++) {
+			const frameDuration = keyframes[i].holdTime + duration;
+			if (elapsed < frameDuration) {
+				currentKeyframeIndex = i;
+				const frameProgress = Math.min(elapsed / frameDuration, 1);
+				const holdProgress = Math.min(elapsed / keyframes[i].holdTime, 1);
+
+				if (holdProgress < 1) {
+					// We're in the hold phase
+					return 0;
+				} else {
+					// We're in the transition phase
+					return (elapsed - keyframes[i].holdTime) / duration;
+				}
+			}
+			elapsed -= frameDuration;
+		}
+
+		// We're at the last keyframe
+		currentKeyframeIndex = keyframes.length - 1;
+		return 1;
+	}
+
 	function animate(currentTime: number) {
 		if (!startTime) startTime = currentTime;
-		const elapsed = currentTime - startTime + pausedTime;
-		progress = Math.min(elapsed / duration, 1);
 
-		const easedProgress = easingFunctions[easingFunction](progress);
-		const currentValue = startValue + (endValue - startValue) * easedProgress;
-		fps.set(Math.round(currentValue));
+		const frameProgress = getCurrentKeyframeProgress(currentTime);
+		const currentFrame = keyframes[currentKeyframeIndex];
+		const nextFrame = keyframes[currentKeyframeIndex + 1];
 
-		if (progress < 1) {
+		if (nextFrame) {
+			// Interpolate between current and next frame
+			const easedProgress = easingFunctions[easingFunction](frameProgress);
+			const currentValue =
+				currentFrame.value + (nextFrame.value - currentFrame.value) * easedProgress;
+			fps.set(Math.round(currentValue));
 			animationFrameId = requestAnimationFrame(animate);
 		} else {
+			// We're at the last frame
+			fps.set(currentFrame.value);
 			isPlaying = false;
 		}
 	}
@@ -113,7 +167,7 @@
 		progress = 0;
 		startTime = 0;
 		pausedTime = 0;
-		fps.set(startValue);
+		fps.set(keyframes[0].value);
 		isPlaying = false;
 	}
 
@@ -132,6 +186,20 @@
 
 	function setSolidColor(color: (typeof colors)[0]) {
 		textClass.set(color.class);
+	}
+
+	function addKeyframe() {
+		const lastFrame = keyframes[keyframes.length - 1];
+		keyframes = [...keyframes.slice(0, -1), { value: lastFrame.value, holdTime: 500 }, lastFrame];
+	}
+
+	function removeKeyframe(index: number) {
+		if (keyframes.length <= 2) return; // Keep at least start and end frames
+		keyframes = keyframes.filter((_, i) => i !== index);
+	}
+
+	function updateKeyframe(index: number, updates: Partial<Keyframe>) {
+		keyframes = keyframes.map((frame, i) => (i === index ? { ...frame, ...updates } : frame));
 	}
 
 	// Initialize gradient on mount
@@ -491,25 +559,56 @@
 						</div>
 
 						<div>
-							<label class="mb-1 block text-xs font-medium text-gray-700">Start Value</label>
-							<input
-								type="number"
-								min="0"
-								max="120"
-								bind:value={startValue}
-								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
-						</div>
-
-						<div>
-							<label class="mb-1 block text-xs font-medium text-gray-700">End Value</label>
-							<input
-								type="number"
-								min="0"
-								max="120"
-								bind:value={endValue}
-								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							/>
+							<label class="mb-1 block text-xs font-medium text-gray-700">Keyframes</label>
+							<div class="space-y-2">
+								{#each keyframes as keyframe, i}
+									<div class="flex items-center gap-2">
+										<input
+											type="number"
+											min="0"
+											max="120"
+											bind:value={keyframe.value}
+											class="w-20 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+										/>
+										<input
+											type="number"
+											min="0"
+											max="2000"
+											step="100"
+											bind:value={keyframe.holdTime}
+											class="w-20 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+										/>
+										<button
+											class="rounded bg-red-500 p-1 text-white hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-500"
+											on:click={() => removeKeyframe(i)}
+											disabled={keyframes.length <= 2}
+										>
+											<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+												/>
+											</svg>
+										</button>
+									</div>
+								{/each}
+								<button
+									class="mt-2 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									on:click={addKeyframe}
+								>
+									<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 4v16m8-8H4"
+										/>
+									</svg>
+									Add Keyframe
+								</button>
+							</div>
 						</div>
 
 						<div>
