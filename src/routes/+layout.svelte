@@ -172,33 +172,68 @@
 
 			{#if activeTab === 'solid'}
 				<!-- Solid Color Selection -->
-				<div class="grid grid-cols-4 gap-0.5">
+				<div class="grid grid-cols-8 gap-0.5">
 					{#each colors as color}
 						<button
-							class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 {$textClass ===
+							class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {$textClass ===
 							color.class
 								? 'ring-1 ring-blue-500'
 								: ''}"
 							on:click={() => setSolidColor(color)}
 						>
 							<div class="h-full w-full rounded {color.bg}"></div>
-							<span
-								class="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
-							>
-								{color.name}
-							</span>
 						</button>
 					{/each}
 				</div>
 			{:else}
 				<!-- Gradient Controls -->
-				<div class="space-y-2">
+				<div class="space-y-1.5">
 					<div>
-						<h3 class="mb-1 text-xs font-medium text-gray-700">Direction</h3>
-						<div class="grid grid-cols-4 gap-1">
+						<h3 class="mb-0.5 text-xs font-medium text-gray-700">From</h3>
+						<div class="grid grid-cols-8 gap-0.5">
+							{#each colors as color}
+								<button
+									class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {fromColor ===
+									color
+										? 'ring-1 ring-blue-500'
+										: ''}"
+									on:click={() => {
+										fromColor = color;
+										updateGradient();
+									}}
+								>
+									<div class="h-full w-full rounded {color.bg}"></div>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div>
+						<h3 class="mb-0.5 text-xs font-medium text-gray-700">To</h3>
+						<div class="grid grid-cols-8 gap-0.5">
+							{#each colors as color}
+								<button
+									class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {toColor ===
+									color
+										? 'ring-1 ring-blue-500'
+										: ''}"
+									on:click={() => {
+										toColor = color;
+										updateGradient();
+									}}
+								>
+									<div class="h-full w-full rounded {color.bg}"></div>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div>
+						<h3 class="mb-0.5 text-xs font-medium text-gray-700">Direction</h3>
+						<div class="grid grid-cols-4 gap-0.5">
 							{#each gradientDirections as direction}
 								<button
-									class="group relative aspect-square rounded border border-gray-200 p-1 shadow-sm hover:border-gray-300 {selectedDirection ===
+									class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {selectedDirection ===
 									direction
 										? 'ring-1 ring-blue-500'
 										: ''}"
@@ -324,56 +359,6 @@
 											</svg>
 										{/if}
 									</div>
-								</button>
-							{/each}
-						</div>
-					</div>
-
-					<div>
-						<h3 class="mb-1 text-xs font-medium text-gray-700">From</h3>
-						<div class="grid grid-cols-4 gap-0.5">
-							{#each colors as color}
-								<button
-									class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 {fromColor ===
-									color
-										? 'ring-1 ring-blue-500'
-										: ''}"
-									on:click={() => {
-										fromColor = color;
-										updateGradient();
-									}}
-								>
-									<div class="h-full w-full rounded {color.bg}"></div>
-									<span
-										class="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										{color.name}
-									</span>
-								</button>
-							{/each}
-						</div>
-					</div>
-
-					<div>
-						<h3 class="mb-1 text-xs font-medium text-gray-700">To</h3>
-						<div class="grid grid-cols-4 gap-0.5">
-							{#each colors as color}
-								<button
-									class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 {toColor ===
-									color
-										? 'ring-1 ring-blue-500'
-										: ''}"
-									on:click={() => {
-										toColor = color;
-										updateGradient();
-									}}
-								>
-									<div class="h-full w-full rounded {color.bg}"></div>
-									<span
-										class="absolute inset-0 flex items-center justify-center text-[8px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										{color.name}
-									</span>
 								</button>
 							{/each}
 						</div>
