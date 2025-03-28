@@ -25,14 +25,16 @@
 		value: number;
 		holdTime: number; // Time to hold at this keyframe in ms
 		transitionDuration: number; // Duration of transition to next keyframe
+		deceleration: number; // Rate of FPS drop (0-1, higher means faster deceleration)
 	};
 
 	let keyframes = $state<Keyframe[]>([
-		{ value: 120, holdTime: 0, transitionDuration: 500 },
-		{ value: 90, holdTime: 50, transitionDuration: 500 },
-		{ value: 60, holdTime: 50, transitionDuration: 500 },
-		{ value: 30, holdTime: 50, transitionDuration: 500 },
-		{ value: 1, holdTime: 0, transitionDuration: 500 }
+		{ value: 120, holdTime: 0, transitionDuration: 300, deceleration: 0.3 }, // Start at max refresh rate
+		{ value: 90, holdTime: 50, transitionDuration: 400, deceleration: 0.4 }, // First deceleration
+		{ value: 60, holdTime: 50, transitionDuration: 500, deceleration: 0.5 }, // Further slowdown
+		{ value: 30, holdTime: 50, transitionDuration: 600, deceleration: 0.6 }, // Significant slowdown
+		{ value: 15, holdTime: 50, transitionDuration: 700, deceleration: 0.7 }, // Almost stopped
+		{ value: 1, holdTime: 0, transitionDuration: 800, deceleration: 0.8 } // Final settling
 	]);
 
 	// Animation configuration
@@ -47,7 +49,7 @@
 		| 'sine'
 		| 'circ'
 		| 'expo'
-	>('easeOut');
+	>('cubic');
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
@@ -162,10 +164,12 @@
 		const nextFrame = keyframes[currentKeyframeIndex + 1];
 
 		if (nextFrame) {
-			// Interpolate between current and next frame
+			// Interpolate between current and next frame with deceleration
 			const easedProgress = easingFunctions[easingFunction](frameProgress);
+			const decelerationFactor = currentFrame.deceleration;
 			const currentValue =
-				currentFrame.value + (nextFrame.value - currentFrame.value) * easedProgress;
+				currentFrame.value +
+				(nextFrame.value - currentFrame.value) * easedProgress * decelerationFactor;
 			fps.set(Math.round(currentValue));
 			progress = getOverallProgress(currentTime);
 			animationFrameId = requestAnimationFrame(animate);
@@ -222,7 +226,7 @@
 		const lastFrame = keyframes[keyframes.length - 1];
 		keyframes = [
 			...keyframes.slice(0, -1),
-			{ value: lastFrame.value, holdTime: 100, transitionDuration: 500 },
+			{ value: lastFrame.value, holdTime: 100, transitionDuration: 500, deceleration: 0.5 },
 			lastFrame
 		];
 	}
@@ -350,6 +354,7 @@
 							<div class="w-16">Value</div>
 							<div class="w-16">Hold</div>
 							<div class="w-16">Transition</div>
+							<div class="w-16">Decel</div>
 							<div class="w-8"></div>
 						</div>
 						{#each keyframes as keyframe, i}
@@ -375,6 +380,14 @@
 									max="2000"
 									step="100"
 									bind:value={keyframe.transitionDuration}
+									class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								/>
+								<input
+									type="number"
+									min="0"
+									max="1"
+									step="0.1"
+									bind:value={keyframe.deceleration}
 									class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 								/>
 								<button
