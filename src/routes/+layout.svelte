@@ -12,9 +12,11 @@
 		'bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent'
 	);
 	let fpsElement: HTMLElement;
+	let animationContainer: HTMLElement;
 	let activeTab = $state('gradient');
 	let animationFrameId: number;
 	let isRecording = $state(false);
+	let isDownloading = $state(false);
 	let recordedFrames: ImageData[] = [];
 	let mediaRecorder: MediaRecorder | null = null;
 	let recordedChunks: Blob[] = [];
@@ -234,10 +236,26 @@
 			// Capture frame if recording
 			if (isRecording && fpsElement) {
 				html2canvas(fpsElement, {
-					backgroundColor: null,
+					backgroundColor: '#ffffff',
 					scale: 2, // Higher quality
 					useCORS: true,
-					allowTaint: true
+					allowTaint: true,
+					width: fpsElement.offsetWidth,
+					height: fpsElement.offsetHeight,
+					onclone: (clonedDoc) => {
+						// Ensure the cloned element has the same styles
+						const clonedElement = clonedDoc.querySelector('.fps-counter') as HTMLElement;
+						if (clonedElement) {
+							// Copy all computed styles from the original element
+							const computedStyle = window.getComputedStyle(fpsElement);
+							clonedElement.style.cssText = computedStyle.cssText;
+							// Ensure text is visible
+							clonedElement.style.color = 'transparent';
+							clonedElement.style.webkitTextFillColor = 'transparent';
+							clonedElement.style.backgroundClip = 'text';
+							clonedElement.style.webkitBackgroundClip = 'text';
+						}
+					}
 				}).then((canvas) => {
 					const ctx = canvas.getContext('2d');
 					if (ctx) {
@@ -295,6 +313,7 @@
 			a.download = 'animation.gif';
 			a.click();
 			URL.revokeObjectURL(url);
+			isDownloading = false;
 		});
 
 		gif.render();
@@ -331,6 +350,7 @@
 			a.click();
 			URL.revokeObjectURL(url);
 			recordedChunks = [];
+			isDownloading = false;
 		};
 
 		mediaRecorder.start();
@@ -377,6 +397,7 @@
 		// Reset and start recording
 		resetAnimation();
 		isRecording = true;
+		isDownloading = true; // Set downloading state immediately
 		recordingType = type;
 		recordedFrames = [];
 		startTime = performance.now();
@@ -464,7 +485,7 @@
 </svelte:head>
 
 <div class="flex h-screen">
-	<div class="flex flex-1 items-center justify-center">
+	<div class="flex flex-1 items-center justify-center" bind:this={animationContainer}>
 		<div class="fps-counter {$textClass}" bind:this={fpsElement}>
 			{$fps}
 		</div>
@@ -495,34 +516,84 @@
 					Play
 				</button>
 				<button
-					class="flex items-center gap-1 rounded bg-green-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500"
+					class="flex items-center gap-1 rounded bg-green-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 {isRecording ||
+					isDownloading
+						? 'cursor-not-allowed opacity-50'
+						: 'hover:bg-green-600'}"
 					on:click={() => startRecording('gif')}
-					disabled={isRecording}
+					disabled={isRecording || isDownloading}
 				>
-					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-						/>
-					</svg>
-					GIF
+					{#if isRecording && recordingType === 'gif'}
+						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+							/>
+						</svg>
+						Recording...
+					{:else if isDownloading && recordingType === 'gif'}
+						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+							/>
+						</svg>
+						Processing...
+					{:else}
+						<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+							/>
+						</svg>
+						GIF
+					{/if}
 				</button>
 				<button
-					class="flex items-center gap-1 rounded bg-purple-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
+					class="flex items-center gap-1 rounded bg-purple-500 px-2 py-1 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 {isRecording ||
+					isDownloading
+						? 'cursor-not-allowed opacity-50'
+						: 'hover:bg-purple-600'}"
 					on:click={() => startRecording('mp4')}
-					disabled={isRecording}
+					disabled={isRecording || isDownloading}
 				>
-					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-						/>
-					</svg>
-					MP4
+					{#if isRecording && recordingType === 'mp4'}
+						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+							/>
+						</svg>
+						Recording...
+					{:else if isDownloading && recordingType === 'mp4'}
+						<svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+							/>
+						</svg>
+						Processing...
+					{:else}
+						<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+							/>
+						</svg>
+						MP4
+					{/if}
 				</button>
 			</div>
 		</div>
