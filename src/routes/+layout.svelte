@@ -41,6 +41,15 @@
 	});
 </script>
 
+<svelte:head>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap"
+		rel="stylesheet"
+	/>
+</svelte:head>
+
 <div class="fps-counter" bind:this={fpsElement}>
 	{$fps}
 </div>
@@ -53,9 +62,9 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		font-family: monospace;
+		font-family: 'Google Sans', sans-serif;
 		font-size: 12rem;
-		font-weight: bold;
+		font-weight: 700;
 		color: #000;
 		z-index: 1000;
 		transition: opacity 0.1s ease;
