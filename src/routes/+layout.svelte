@@ -24,18 +24,18 @@
 	type Keyframe = {
 		value: number;
 		holdTime: number; // Time to hold at this keyframe in ms
+		transitionDuration: number; // Duration of transition to next keyframe
 	};
 
 	let keyframes = $state<Keyframe[]>([
-		{ value: 120, holdTime: 0 },
-		{ value: 90, holdTime: 500 },
-		{ value: 75, holdTime: 500 },
-		{ value: 30, holdTime: 500 },
-		{ value: 24, holdTime: 0 }
+		{ value: 120, holdTime: 0, transitionDuration: 500 },
+		{ value: 90, holdTime: 100, transitionDuration: 500 },
+		{ value: 75, holdTime: 100, transitionDuration: 500 },
+		{ value: 30, holdTime: 100, transitionDuration: 500 },
+		{ value: 24, holdTime: 0, transitionDuration: 500 }
 	]);
 
 	// Animation configuration
-	let duration = $state(2000); // 2 seconds
 	let easingFunction = $state<'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | 'bounce' | 'elastic'>(
 		'linear'
 	);
@@ -93,7 +93,7 @@
 	function getTotalDuration() {
 		return keyframes.reduce((total, frame, index) => {
 			const isLast = index === keyframes.length - 1;
-			return total + frame.holdTime + (isLast ? 0 : duration);
+			return total + frame.holdTime + (isLast ? 0 : frame.transitionDuration);
 		}, 0);
 	}
 
@@ -104,7 +104,7 @@
 
 		// Find which keyframe we're in and calculate progress
 		for (let i = 0; i < keyframes.length - 1; i++) {
-			const frameDuration = keyframes[i].holdTime + duration;
+			const frameDuration = keyframes[i].holdTime + keyframes[i].transitionDuration;
 			if (elapsed < frameDuration) {
 				currentKeyframeIndex = i;
 				const frameProgress = Math.min(elapsed / frameDuration, 1);
@@ -115,7 +115,7 @@
 					return 0;
 				} else {
 					// We're in the transition phase
-					return (elapsed - keyframes[i].holdTime) / duration;
+					return (elapsed - keyframes[i].holdTime) / keyframes[i].transitionDuration;
 				}
 			}
 			elapsed -= frameDuration;
@@ -124,6 +124,12 @@
 		// We're at the last keyframe
 		currentKeyframeIndex = keyframes.length - 1;
 		return 1;
+	}
+
+	function getOverallProgress(currentTime: number) {
+		let elapsed = currentTime - startTime + pausedTime;
+		let totalDuration = getTotalDuration();
+		return Math.min(elapsed / totalDuration, 1);
 	}
 
 	function animate(currentTime: number) {
@@ -139,10 +145,12 @@
 			const currentValue =
 				currentFrame.value + (nextFrame.value - currentFrame.value) * easedProgress;
 			fps.set(Math.round(currentValue));
+			progress = getOverallProgress(currentTime);
 			animationFrameId = requestAnimationFrame(animate);
 		} else {
 			// We're at the last frame
 			fps.set(currentFrame.value);
+			progress = 1;
 			isPlaying = false;
 		}
 	}
@@ -190,7 +198,11 @@
 
 	function addKeyframe() {
 		const lastFrame = keyframes[keyframes.length - 1];
-		keyframes = [...keyframes.slice(0, -1), { value: lastFrame.value, holdTime: 500 }, lastFrame];
+		keyframes = [
+			...keyframes.slice(0, -1),
+			{ value: lastFrame.value, holdTime: 100, transitionDuration: 500 },
+			lastFrame
+		];
 	}
 
 	function removeKeyframe(index: number) {
@@ -200,6 +212,14 @@
 
 	function updateKeyframe(index: number, updates: Partial<Keyframe>) {
 		keyframes = keyframes.map((frame, i) => (i === index ? { ...frame, ...updates } : frame));
+	}
+
+	function getKeyframePosition(index: number) {
+		let position = 0;
+		for (let i = 0; i < index; i++) {
+			position += keyframes[i].holdTime + keyframes[i].transitionDuration;
+		}
+		return position / getTotalDuration();
 	}
 
 	// Initialize gradient on mount
@@ -282,6 +302,14 @@
 					>
 						Solid
 					</button>
+					<button
+						class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab === 'custom'
+							? 'border-blue-500 text-blue-600'
+							: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+						on:click={() => (activeTab = 'custom')}
+					>
+						Custom
+					</button>
 				</nav>
 			</div>
 
@@ -299,6 +327,20 @@
 							<div class="h-full w-full rounded {color.bg}"></div>
 						</button>
 					{/each}
+				</div>
+			{:else if activeTab === 'custom'}
+				<!-- Custom Input -->
+				<div class="space-y-2">
+					<label class="block text-xs font-medium text-gray-700">Custom Classes</label>
+					<input
+						type="text"
+						bind:value={$textClass}
+						class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+						placeholder="Custom classes..."
+					/>
+					<p class="text-xs text-gray-500">
+						Enter custom Tailwind classes. Example: bg-gradient-to-r from-blue-500 to-purple-500
+					</p>
 				</div>
 			{:else}
 				<!-- Gradient Controls -->
@@ -536,9 +578,21 @@
 					</div>
 
 					<!-- Progress Bar -->
-					<div class="h-1.5 rounded-full bg-gray-200">
+					<div class="relative h-1.5 rounded-full bg-gray-200">
+						<!-- Keyframe Markers and Labels -->
+						{#each keyframes as keyframe, i}
+							<div class="absolute" style="left: {getKeyframePosition(i) * 100}%">
+								<!-- FPS Value Label -->
+								<div class="absolute -top-4 left-1/2 -translate-x-1/2 text-xs text-gray-500">
+									{keyframe.value}
+								</div>
+								<!-- Marker Line -->
+								<div class="h-full w-0.5 bg-gray-400" />
+							</div>
+						{/each}
+						<!-- Progress Fill -->
 						<div
-							class="h-full rounded-full bg-blue-500 transition-all duration-100"
+							class="absolute h-full rounded-full bg-blue-500 transition-all duration-100"
 							style="width: {progress * 100}%"
 						/>
 					</div>
@@ -546,21 +600,20 @@
 					<!-- Animation Parameters -->
 					<div class="space-y-3">
 						<div>
-							<label class="mb-1 block text-xs font-medium text-gray-700">Duration (ms)</label>
-							<input
-								type="range"
-								min="500"
-								max="5000"
-								step="100"
-								bind:value={duration}
-								class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-							/>
-							<div class="mt-1 text-xs text-gray-500">{duration}ms</div>
+							<label class="mb-1 block text-xs font-medium text-gray-700"
+								>Total Duration: {getTotalDuration()}ms</label
+							>
 						</div>
 
 						<div>
 							<label class="mb-1 block text-xs font-medium text-gray-700">Keyframes</label>
 							<div class="space-y-2">
+								<div class="flex items-center gap-2 text-xs text-gray-500">
+									<div class="w-16">Value</div>
+									<div class="w-16">Hold</div>
+									<div class="w-16">Transition</div>
+									<div class="w-8"></div>
+								</div>
 								{#each keyframes as keyframe, i}
 									<div class="flex items-center gap-2">
 										<input
@@ -568,15 +621,23 @@
 											min="0"
 											max="120"
 											bind:value={keyframe.value}
-											class="w-20 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+											class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 										/>
 										<input
 											type="number"
 											min="0"
-											max="2000"
+											max="1000"
 											step="100"
 											bind:value={keyframe.holdTime}
-											class="w-20 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+											class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+										/>
+										<input
+											type="number"
+											min="100"
+											max="2000"
+											step="100"
+											bind:value={keyframe.transitionDuration}
+											class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 										/>
 										<button
 											class="rounded bg-red-500 p-1 text-white hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-500"
@@ -624,23 +685,6 @@
 						</div>
 					</div>
 				</div>
-			</div>
-
-			<!-- Custom Input (Collapsible) -->
-			<div class="border-t border-gray-200 pt-2">
-				<details>
-					<summary class="cursor-pointer text-xs font-medium text-gray-700 hover:text-gray-900">
-						Custom
-					</summary>
-					<div class="mt-1">
-						<input
-							type="text"
-							bind:value={$textClass}
-							class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							placeholder="Custom classes..."
-						/>
-					</div>
-				</details>
 			</div>
 		</div>
 	</div>
