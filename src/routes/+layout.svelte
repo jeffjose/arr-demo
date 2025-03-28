@@ -1,25 +1,39 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store';
 
 	let { children } = $props();
 
-	let fps = 120;
+	const fps = writable(120);
 	let fpsElement: HTMLElement;
 
 	onMount(() => {
+		console.log('Animation started');
 		const duration = 2000; // 2 seconds
 		const startTime = performance.now();
 		const totalSteps = 120; // We want to show all numbers from 120 to 0
 		const stepDuration = duration / totalSteps;
+		console.log('Step duration:', stepDuration, 'ms');
 
 		function animate(currentTime: number) {
 			const elapsed = currentTime - startTime;
 			const currentStep = Math.floor(elapsed / stepDuration);
 
 			if (currentStep <= totalSteps) {
-				fps = 120 - currentStep;
+				fps.set(120 - currentStep);
+				console.log(
+					'Current FPS:',
+					120 - currentStep,
+					'Step:',
+					currentStep,
+					'Elapsed:',
+					elapsed.toFixed(2),
+					'ms'
+				);
 				requestAnimationFrame(animate);
+			} else {
+				console.log('Animation completed');
 			}
 		}
 
@@ -28,7 +42,7 @@
 </script>
 
 <div class="fps-counter" bind:this={fpsElement}>
-	{fps}
+	{$fps}
 </div>
 
 {@render children()}
