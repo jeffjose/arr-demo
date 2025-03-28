@@ -50,7 +50,10 @@
 	/>
 </svelte:head>
 
-<div class="fps-counter" bind:this={fpsElement}>
+<div
+	class="fps-counter bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent"
+	bind:this={fpsElement}
+>
 	{$fps}
 </div>
 
@@ -65,7 +68,6 @@
 		font-family: 'Google Sans', sans-serif;
 		font-size: 12rem;
 		font-weight: 700;
-		color: #000;
 		z-index: 1000;
 		transition: opacity 0.1s ease;
 	}
