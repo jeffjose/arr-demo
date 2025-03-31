@@ -66,7 +66,9 @@
 		| 'easeInOutQuad'
 		| 'easeInQuart'
 		| 'easeOutQuart'
-		| 'easeInOutQuart',
+		| 'easeInOutQuart'
+		| 'easeOutQuint'
+		| 'easeOutCirc',
 		(t: number) => number
 	>('easeOutExpo');
 
@@ -120,7 +122,9 @@
 		| 'easeInOutQuad'
 		| 'easeInQuart'
 		| 'easeOutQuart'
-		| 'easeInOutQuart',
+		| 'easeInOutQuart'
+		| 'easeOutQuint'
+		| 'easeOutCirc',
 		(t: number) => number
 	> = {
 		linear: (t: number) => t,
@@ -170,7 +174,9 @@
 		easeInOutQuad: (t: number) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t),
 		easeInQuart: (t: number) => t * t * t * t,
 		easeOutQuart: (t: number) => 1 - Math.pow(1 - t, 4),
-		easeInOutQuart: (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2)
+		easeInOutQuart: (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2),
+		easeOutQuint: (t: number) => 1 - Math.pow(1 - t, 5),
+		easeOutCirc: (t: number) => Math.sqrt(1 - Math.pow(t - 1, 2))
 	};
 
 	function getTotalDuration() {
