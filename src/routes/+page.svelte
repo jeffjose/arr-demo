@@ -473,10 +473,49 @@
 		}
 	}
 
+	let selectedFont = $state('Google Sans');
+
+	const googleFonts = [
+		'Google Sans',
+		'Roboto',
+		'Open Sans',
+		'Lato',
+		'Montserrat',
+		'Poppins',
+		'Source Sans Pro',
+		'Ubuntu',
+		'Raleway',
+		'Nunito',
+		'Inter',
+		'Playfair Display',
+		'Merriweather',
+		'Noto Sans',
+		'Work Sans',
+		'Quicksand',
+		'Rubik',
+		'Mulish',
+		'DM Sans',
+		'Outfit',
+		'Plus Jakarta Sans',
+		'Manrope',
+		'Figtree',
+		'Space Grotesk',
+		'Lexend'
+	];
+
+	function updateFont(font: string) {
+		selectedFont = font;
+		// Update the font-family in the style
+		document
+			.querySelector('.fps-counter')
+			?.setAttribute('style', `font-family: '${font}', sans-serif`);
+	}
+
 	// Initialize gradient on mount
 	onMount(() => {
 		updateGradient();
 		restartAnimation();
+		updateFont(selectedFont);
 		return () => {
 			if (animationFrameId) {
 				cancelAnimationFrame(animationFrameId);
@@ -489,12 +528,12 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;500;700&family=Lato:wght@400;500;700&family=Montserrat:wght@400;500;700&family=Poppins:wght@400;500;700&family=Source+Sans+Pro:wght@400;500;700&family=Ubuntu:wght@400;500;700&family=Raleway:wght@400;500;700&family=Nunito:wght@400;500;700&family=Inter:wght@400;500;700&family=Playfair+Display:wght@400;500;700&family=Merriweather:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=Work+Sans:wght@400;500;700&family=Quicksand:wght@400;500;700&family=Rubik:wght@400;500;700&family=Mulish:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=Outfit:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;700&family=Manrope:wght@400;500;700&family=Figtree:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&family=Lexend:wght@400;500;700&display=swap"
 		rel="stylesheet"
 	/>
 </svelte:head>
 
-<div class="flex h-screen">
+<div class="flex h-screen overflow-hidden">
 	<div
 		class="flex flex-1 items-center justify-center {backgroundClass}"
 		style={backgroundStyle}
@@ -505,445 +544,473 @@
 		</div>
 	</div>
 
-	<div class="w-1/4 border-l border-gray-200 bg-white p-4">
-		<div class="mb-4 flex items-center justify-between">
-			<h2 class="text-sm font-semibold text-gray-700">Animation</h2>
-			<div class="flex gap-2">
-				<button
-					class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-					on:click={restartAnimation}
-				>
-					<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-						/>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					Play
-				</button>
-			</div>
-		</div>
-
-		<!-- Animation Controls -->
-		<div class="space-y-4">
-			<!-- Progress Bar -->
-			<div class="relative h-1.5 rounded-full bg-gray-200">
-				<!-- Keyframe Markers and Labels -->
-				{#each keyframes as keyframe, i}
-					<div class="absolute" style="left: {getKeyframePosition(i) * 100}%">
-						<!-- FPS Value Label -->
-						<div class="absolute -top-4 left-1/2 -translate-x-1/2 text-xs text-gray-500">
-							{keyframe.value}
-						</div>
-						<!-- Marker Line -->
-						<div class="h-full w-0.5 bg-gray-400" />
-					</div>
-				{/each}
-				<!-- Progress Fill -->
-				<div
-					class="absolute h-full rounded-full bg-blue-500 transition-all duration-100"
-					style="width: {progress * 100}%"
-				/>
-			</div>
-
-			<!-- Animation Parameters -->
-			<div class="space-y-3">
-				<div>
-					<label class="mb-1 block text-xs font-medium text-gray-700"
-						>Total Duration: {getTotalDuration()}ms</label
+	<div class="w-1/4 overflow-y-auto border-l border-gray-200 bg-white">
+		<div class="p-4">
+			<div class="mb-4 flex items-center justify-between">
+				<h2 class="text-sm font-semibold text-gray-700">Animation</h2>
+				<div class="flex gap-2">
+					<button
+						class="flex items-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+						on:click={restartAnimation}
 					>
+						<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+							/>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						Play
+					</button>
 				</div>
+			</div>
 
-				<div>
-					<label class="mb-1 block text-xs font-medium text-gray-700">Keyframes</label>
-					<div class="space-y-2">
-						<div class="flex items-center gap-2 text-xs text-gray-500">
-							<div class="w-16">Value</div>
-							<div class="w-16">Hold</div>
-							<div class="w-16">Transition</div>
-							<div class="w-8"></div>
-						</div>
-						{#each keyframes as keyframe, i}
-							<div class="flex items-center gap-2">
-								<input
-									type="number"
-									min="0"
-									max="120"
-									bind:value={keyframe.value}
-									class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-								/>
-								<input
-									type="number"
-									min="0"
-									max="1000"
-									step="100"
-									bind:value={keyframe.holdTime}
-									class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-								/>
-								<input
-									type="number"
-									min="100"
-									max="2000"
-									step="100"
-									bind:value={keyframe.transitionDuration}
-									class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-								/>
-								<button
-									class="rounded bg-red-500 p-1 text-white hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-500"
-									on:click={() => removeKeyframe(i)}
-									disabled={keyframes.length <= 2}
-								>
-									<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-										/>
-									</svg>
-								</button>
+			<!-- Animation Controls -->
+			<div class="space-y-4">
+				<!-- Progress Bar -->
+				<div class="relative h-1.5 rounded-full bg-gray-200">
+					<!-- Keyframe Markers and Labels -->
+					{#each keyframes as keyframe, i}
+						<div class="absolute" style="left: {getKeyframePosition(i) * 100}%">
+							<!-- FPS Value Label -->
+							<div class="absolute -top-4 left-1/2 -translate-x-1/2 text-xs text-gray-500">
+								{keyframe.value}
 							</div>
-						{/each}
-						<button
-							class="mt-2 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							on:click={addKeyframe}
-						>
-							<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 4v16m8-8H4"
-								/>
-							</svg>
-							Add Keyframe
-						</button>
-					</div>
+							<!-- Marker Line -->
+							<div class="h-full w-0.5 bg-gray-400" />
+						</div>
+					{/each}
+					<!-- Progress Fill -->
+					<div
+						class="absolute h-full rounded-full bg-blue-500 transition-all duration-100"
+						style="width: {progress * 100}%"
+					/>
 				</div>
 
-				<div>
-					<label class="mb-1 block text-xs font-medium text-gray-700">Animation</label>
-					<select
-						bind:value={easingFunction}
-						class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-					>
-						<option value="no animation">No Animation</option>
-						{#each Object.keys(easingFunctions).filter((key) => key !== 'no animation') as easing}
-							<option value={easing}>{easing}</option>
-						{/each}
-					</select>
-				</div>
-			</div>
-		</div>
-
-		<!-- Color Controls -->
-		<div class="mt-8 border-t border-gray-200 pt-4">
-			<h2 class="mb-4 text-sm font-semibold text-gray-700">Style</h2>
-			<div class="space-y-3">
-				<!-- Tabs -->
-				<div class="border-b border-gray-200">
-					<nav class="-mb-px flex space-x-4">
-						<button
-							class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
-							'gradient'
-								? 'border-blue-500 text-blue-600'
-								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
-							on:click={() => {
-								activeTab = 'gradient';
-							}}
+				<!-- Animation Parameters -->
+				<div class="space-y-3">
+					<div>
+						<label class="mb-1 block text-xs font-medium text-gray-700"
+							>Total Duration: {getTotalDuration()}ms</label
 						>
-							Gradient
-						</button>
-						<button
-							class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab === 'solid'
-								? 'border-blue-500 text-blue-600'
-								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
-							on:click={() => (activeTab = 'solid')}
-						>
-							Solid
-						</button>
-						<button
-							class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
-							'custom'
-								? 'border-blue-500 text-blue-600'
-								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
-							on:click={() => (activeTab = 'custom')}
-						>
-							Custom
-						</button>
-						<button
-							class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
-							'background'
-								? 'border-blue-500 text-blue-600'
-								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
-							on:click={() => (activeTab = 'background')}
-						>
-							Background
-						</button>
-					</nav>
-				</div>
-
-				{#if activeTab === 'solid'}
-					<!-- Solid Color Selection -->
-					<div class="grid grid-cols-8 gap-0.5">
-						{#each colors as color}
-							<button
-								class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {$textClass ===
-								color.class
-									? 'ring-1 ring-blue-500'
-									: ''}"
-								on:click={() => setSolidColor(color)}
-							>
-								<div class="h-full w-full rounded {color.bg}"></div>
-							</button>
-						{/each}
 					</div>
-				{:else if activeTab === 'custom'}
-					<!-- Custom Input -->
-					<div class="space-y-2">
-						<label class="block text-xs font-medium text-gray-700">Custom Color</label>
-						<input
-							type="text"
-							bind:value={customColorInput}
-							on:input={(e) => updateTextColor(e.currentTarget.value)}
-							class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							placeholder="Enter hex color (#FF0000) or Tailwind class..."
-						/>
-						<p class="text-xs text-gray-500">
-							Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. text-blue-500)
-						</p>
-					</div>
-				{:else if activeTab === 'background'}
-					<!-- Background Color Selection -->
-					<div class="space-y-3">
-						<div>
-							<h3 class="mb-0.5 text-xs font-medium text-gray-700">Preset Colors</h3>
-							<div class="grid grid-cols-8 gap-0.5">
-								{#each backgroundColors as color}
+
+					<div>
+						<label class="mb-1 block text-xs font-medium text-gray-700">Keyframes</label>
+						<div class="space-y-2">
+							<div class="flex items-center gap-2 text-xs text-gray-500">
+								<div class="w-16">Value</div>
+								<div class="w-16">Hold</div>
+								<div class="w-16">Transition</div>
+								<div class="w-8"></div>
+							</div>
+							{#each keyframes as keyframe, i}
+								<div class="flex items-center gap-2">
+									<input
+										type="number"
+										min="0"
+										max="120"
+										bind:value={keyframe.value}
+										class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									/>
+									<input
+										type="number"
+										min="0"
+										max="1000"
+										step="100"
+										bind:value={keyframe.holdTime}
+										class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									/>
+									<input
+										type="number"
+										min="100"
+										max="2000"
+										step="100"
+										bind:value={keyframe.transitionDuration}
+										class="w-16 rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									/>
 									<button
-										class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {backgroundClass ===
-										color.class
-											? 'ring-1 ring-blue-500'
-											: ''}"
-										on:click={() => {
-											// Clear any inline styles and custom input first
-											backgroundStyle = '';
-											const input = document.querySelector(
-												'input[placeholder*="hex color"]'
-											) as HTMLInputElement;
-											if (input) input.value = '';
-											// Then set the new color
-											backgroundClass = color.class;
-										}}
+										class="rounded bg-red-500 p-1 text-white hover:bg-red-600 focus:outline-none focus:ring-1 focus:ring-red-500"
+										on:click={() => removeKeyframe(i)}
+										disabled={keyframes.length <= 2}
 									>
-										<div class="h-full w-full rounded {color.class}"></div>
+										<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+											/>
+										</svg>
 									</button>
-								{/each}
-							</div>
+								</div>
+							{/each}
+							<button
+								class="mt-2 flex w-full items-center justify-center gap-1 rounded bg-blue-500 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								on:click={addKeyframe}
+							>
+								<svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 4v16m8-8H4"
+									/>
+								</svg>
+								Add Keyframe
+							</button>
 						</div>
+					</div>
 
-						<div>
-							<h3 class="mb-0.5 text-xs font-medium text-gray-700">Custom Background</h3>
+					<div>
+						<label class="mb-1 block text-xs font-medium text-gray-700">Animation</label>
+						<select
+							bind:value={easingFunction}
+							class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+						>
+							<option value="no animation">No Animation</option>
+							{#each Object.keys(easingFunctions).filter((key) => key !== 'no animation') as easing}
+								<option value={easing}>{easing}</option>
+							{/each}
+						</select>
+					</div>
+				</div>
+			</div>
+
+			<!-- Color Controls -->
+			<div class="mt-8 border-t border-gray-200 pt-4">
+				<h2 class="mb-4 text-sm font-semibold text-gray-700">Style</h2>
+				<div class="space-y-3">
+					<!-- Tabs -->
+					<div class="border-b border-gray-200">
+						<nav class="-mb-px flex space-x-4">
+							<button
+								class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+								'gradient'
+									? 'border-blue-500 text-blue-600'
+									: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+								on:click={() => {
+									activeTab = 'gradient';
+								}}
+							>
+								Gradient
+							</button>
+							<button
+								class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+								'solid'
+									? 'border-blue-500 text-blue-600'
+									: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+								on:click={() => (activeTab = 'solid')}
+							>
+								Solid
+							</button>
+							<button
+								class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+								'custom'
+									? 'border-blue-500 text-blue-600'
+									: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+								on:click={() => (activeTab = 'custom')}
+							>
+								Custom
+							</button>
+							<button
+								class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+								'background'
+									? 'border-blue-500 text-blue-600'
+									: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+								on:click={() => (activeTab = 'background')}
+							>
+								Background
+							</button>
+							<button
+								class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+								'font'
+									? 'border-blue-500 text-blue-600'
+									: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+								on:click={() => (activeTab = 'font')}
+							>
+								Font
+							</button>
+						</nav>
+					</div>
+
+					{#if activeTab === 'solid'}
+						<!-- Solid Color Selection -->
+						<div class="grid grid-cols-8 gap-0.5">
+							{#each colors as color}
+								<button
+									class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {$textClass ===
+									color.class
+										? 'ring-1 ring-blue-500'
+										: ''}"
+									on:click={() => setSolidColor(color)}
+								>
+									<div class="h-full w-full rounded {color.bg}"></div>
+								</button>
+							{/each}
+						</div>
+					{:else if activeTab === 'custom'}
+						<!-- Custom Input -->
+						<div class="space-y-2">
+							<label class="block text-xs font-medium text-gray-700">Custom Color</label>
 							<input
 								type="text"
-								value={backgroundClass}
-								on:input={(e) => updateBackgroundColor(e.currentTarget.value)}
+								bind:value={customColorInput}
+								on:input={(e) => updateTextColor(e.currentTarget.value)}
 								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 								placeholder="Enter hex color (#FF0000) or Tailwind class..."
 							/>
 							<p class="text-xs text-gray-500">
-								Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. bg-blue-500)
+								Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. text-blue-500)
 							</p>
 						</div>
-					</div>
-				{:else}
-					<!-- Gradient Controls -->
-					<div class="space-y-1.5">
-						<div>
-							<h3 class="mb-0.5 text-xs font-medium text-gray-700">From</h3>
-							<div class="grid grid-cols-8 gap-0.5">
-								{#each colors as color}
-									<button
-										class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {fromColor ===
-										color
-											? 'ring-1 ring-blue-500'
-											: ''}"
-										on:click={() => {
-											fromColor = color;
-											updateGradient();
-										}}
-									>
-										<div class="h-full w-full rounded {color.bg}"></div>
-									</button>
-								{/each}
-							</div>
-						</div>
-
-						<div>
-							<h3 class="mb-0.5 text-xs font-medium text-gray-700">To</h3>
-							<div class="grid grid-cols-8 gap-0.5">
-								{#each colors as color}
-									<button
-										class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {toColor ===
-										color
-											? 'ring-1 ring-blue-500'
-											: ''}"
-										on:click={() => {
-											toColor = color;
-											updateGradient();
-										}}
-									>
-										<div class="h-full w-full rounded {color.bg}"></div>
-									</button>
-								{/each}
-							</div>
-						</div>
-
-						<div>
-							<h3 class="mb-0.5 text-xs font-medium text-gray-700">Direction</h3>
-							<div class="grid grid-cols-4 gap-0.5">
-								{#each gradientDirections as direction}
-									<button
-										class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {selectedDirection ===
-										direction
-											? 'ring-1 ring-blue-500'
-											: ''}"
-										on:click={() => {
-											selectedDirection = direction;
-											updateGradient();
-										}}
-									>
-										<div
-											class="flex h-full w-full items-center justify-center rounded bg-gradient-to-br from-gray-100 to-gray-200"
+					{:else if activeTab === 'background'}
+						<!-- Background Color Selection -->
+						<div class="space-y-3">
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">Preset Colors</h3>
+								<div class="grid grid-cols-8 gap-0.5">
+									{#each backgroundColors as color}
+										<button
+											class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {backgroundClass ===
+											color.class
+												? 'ring-1 ring-blue-500'
+												: ''}"
+											on:click={() => {
+												// Clear any inline styles and custom input first
+												backgroundStyle = '';
+												const input = document.querySelector(
+													'input[placeholder*="hex color"]'
+												) as HTMLInputElement;
+												if (input) input.value = '';
+												// Then set the new color
+												backgroundClass = color.class;
+											}}
 										>
-											{#if direction.class === 'bg-gradient-to-r'}
-												<svg
-													class="h-4 w-4 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-l'}
-												<svg
-													class="h-4 w-4 rotate-180 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-b'}
-												<svg
-													class="h-4 w-4 rotate-90 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-t'}
-												<svg
-													class="h-4 w-4 -rotate-90 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-tr'}
-												<svg
-													class="h-4 w-4 rotate-45 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-tl'}
-												<svg
-													class="h-4 w-4 -rotate-45 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-br'}
-												<svg
-													class="rotate-135 h-4 w-4 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{:else if direction.class === 'bg-gradient-to-bl'}
-												<svg
-													class="-rotate-135 h-4 w-4 text-blue-500"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M13 7l5 5m0 0l-5 5m5-5H6"
-													/>
-												</svg>
-											{/if}
-										</div>
-									</button>
-								{/each}
+											<div class="h-full w-full rounded {color.class}"></div>
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">Custom Background</h3>
+								<input
+									type="text"
+									value={backgroundClass}
+									on:input={(e) => updateBackgroundColor(e.currentTarget.value)}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+									placeholder="Enter hex color (#FF0000) or Tailwind class..."
+								/>
+								<p class="text-xs text-gray-500">
+									Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. bg-blue-500)
+								</p>
 							</div>
 						</div>
-					</div>
-				{/if}
+					{:else if activeTab === 'font'}
+						<!-- Font Selection -->
+						<div class="space-y-3">
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">Google Fonts</h3>
+								<select
+									bind:value={selectedFont}
+									on:change={(e) => updateFont(e.currentTarget.value)}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								>
+									{#each googleFonts as font}
+										<option value={font}>{font}</option>
+									{/each}
+								</select>
+							</div>
+						</div>
+					{:else}
+						<!-- Gradient Controls -->
+						<div class="space-y-1.5">
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">From</h3>
+								<div class="grid grid-cols-8 gap-0.5">
+									{#each colors as color}
+										<button
+											class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {fromColor ===
+											color
+												? 'ring-1 ring-blue-500'
+												: ''}"
+											on:click={() => {
+												fromColor = color;
+												updateGradient();
+											}}
+										>
+											<div class="h-full w-full rounded {color.bg}"></div>
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">To</h3>
+								<div class="grid grid-cols-8 gap-0.5">
+									{#each colors as color}
+										<button
+											class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {toColor ===
+											color
+												? 'ring-1 ring-blue-500'
+												: ''}"
+											on:click={() => {
+												toColor = color;
+												updateGradient();
+											}}
+										>
+											<div class="h-full w-full rounded {color.bg}"></div>
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<div>
+								<h3 class="mb-0.5 text-xs font-medium text-gray-700">Direction</h3>
+								<div class="grid grid-cols-4 gap-0.5">
+									{#each gradientDirections as direction}
+										<button
+											class="group relative aspect-square rounded border border-gray-200 p-0.5 shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {selectedDirection ===
+											direction
+												? 'ring-1 ring-blue-500'
+												: ''}"
+											on:click={() => {
+												selectedDirection = direction;
+												updateGradient();
+											}}
+										>
+											<div
+												class="flex h-full w-full items-center justify-center rounded bg-gradient-to-br from-gray-100 to-gray-200"
+											>
+												{#if direction.class === 'bg-gradient-to-r'}
+													<svg
+														class="h-4 w-4 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-l'}
+													<svg
+														class="h-4 w-4 rotate-180 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-b'}
+													<svg
+														class="h-4 w-4 rotate-90 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-t'}
+													<svg
+														class="h-4 w-4 -rotate-90 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-tr'}
+													<svg
+														class="h-4 w-4 rotate-45 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-tl'}
+													<svg
+														class="h-4 w-4 -rotate-45 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-br'}
+													<svg
+														class="rotate-135 h-4 w-4 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{:else if direction.class === 'bg-gradient-to-bl'}
+													<svg
+														class="-rotate-135 h-4 w-4 text-blue-500"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 7l5 5m0 0l-5 5m5-5H6"
+														/>
+													</svg>
+												{/if}
+											</div>
+										</button>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
