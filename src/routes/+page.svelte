@@ -14,6 +14,10 @@
 	let fpsElement: HTMLElement;
 	let animationContainer: HTMLElement;
 	let activeTab = $state('gradient');
+	let backgroundClass = $state('bg-white');
+	let customColorInput = $state('');
+	let textStyle = $state(''); // Add this for inline styles
+	let backgroundStyle = $state(''); // Add this for background inline styles
 	let animationFrameId: number;
 	let isRecording = $state(false);
 	let isDownloading = $state(false);
@@ -40,6 +44,7 @@
 		{ value: 120, holdTime: 200, transitionDuration: 500 }, // Start at max refresh rate with hold
 		{ value: 60, holdTime: 200, transitionDuration: 200 }, // Significant slowdown with hold
 		{ value: 30, holdTime: 200, transitionDuration: 1000 }, // Further slowdown with hold
+		{ value: 60, holdTime: 200, transitionDuration: 500 }, // Bounce back up
 		{ value: 1, holdTime: 0, transitionDuration: 200 } // Final settling
 	]);
 
@@ -56,6 +61,25 @@
 		{ name: 'Orange', class: 'text-orange-500', bg: 'bg-orange-500' },
 		{ name: 'Teal', class: 'text-teal-500', bg: 'bg-teal-500' },
 		{ name: 'Indigo', class: 'text-indigo-500', bg: 'bg-indigo-500' }
+	];
+
+	const backgroundColors = [
+		{ name: 'White', class: 'bg-white' },
+		{ name: 'Red', class: 'bg-red-500' },
+		{ name: 'Blue', class: 'bg-blue-500' },
+		{ name: 'Green', class: 'bg-green-500' },
+		{ name: 'Purple', class: 'bg-purple-500' },
+		{ name: 'Yellow', class: 'bg-yellow-500' },
+		{ name: 'Pink', class: 'bg-pink-500' },
+		{ name: 'Orange', class: 'bg-orange-500' },
+		{ name: 'Teal', class: 'bg-teal-500' },
+		{ name: 'Indigo', class: 'bg-indigo-500' },
+		{ name: 'Gray 100', class: 'bg-gray-100' },
+		{ name: 'Gray 200', class: 'bg-gray-200' },
+		{ name: 'Gray 300', class: 'bg-gray-300' },
+		{ name: 'Gray 400', class: 'bg-gray-400' },
+		{ name: 'Gray 500', class: 'bg-gray-500' },
+		{ name: 'Black', class: 'bg-black' }
 	];
 
 	const gradientDirections = [
@@ -370,6 +394,7 @@
 	}
 
 	function updateGradient() {
+		textStyle = ''; // Clear any inline styles
 		textClass.set(
 			`${selectedDirection.class} from-${fromColor.bg.split('-')[1]}-500 to-${toColor.bg.split('-')[1]}-500 bg-clip-text text-transparent`
 		);
@@ -377,6 +402,21 @@
 
 	function setSolidColor(color: (typeof colors)[0]) {
 		textClass.set(color.class);
+		textStyle = ''; // Clear any inline styles
+		customColorInput = ''; // Clear custom input
+	}
+
+	function updateTextColor(value: string) {
+		customColorInput = value;
+		if (value.startsWith('#')) {
+			// Handle hex color with inline style
+			textStyle = `color: ${value}`;
+			textClass.set(''); // Clear any Tailwind classes
+		} else {
+			// Handle Tailwind class
+			textStyle = ''; // Clear inline style
+			textClass.set(value);
+		}
 	}
 
 	function addKeyframe() {
@@ -421,6 +461,18 @@
 		return path;
 	}
 
+	function updateBackgroundColor(value: string) {
+		if (value.startsWith('#')) {
+			// Handle hex color with inline style
+			backgroundStyle = `background-color: ${value}`;
+			backgroundClass = ''; // Clear any Tailwind classes
+		} else {
+			// Handle Tailwind class
+			backgroundStyle = ''; // Clear inline style
+			backgroundClass = value;
+		}
+	}
+
 	// Initialize gradient on mount
 	onMount(() => {
 		updateGradient();
@@ -443,13 +495,17 @@
 </svelte:head>
 
 <div class="flex h-screen">
-	<div class="flex flex-1 items-center justify-center" bind:this={animationContainer}>
-		<div class="fps-counter {$textClass}" bind:this={fpsElement}>
+	<div
+		class="flex flex-1 items-center justify-center {backgroundClass}"
+		style={backgroundStyle}
+		bind:this={animationContainer}
+	>
+		<div class="fps-counter {$textClass}" style={textStyle} bind:this={fpsElement}>
 			{$fps}
 		</div>
 	</div>
 
-	<div class="w-1/4 border-l border-gray-200 p-4">
+	<div class="w-1/4 border-l border-gray-200 bg-white p-4">
 		<div class="mb-4 flex items-center justify-between">
 			<h2 class="text-sm font-semibold text-gray-700">Animation</h2>
 			<div class="flex gap-2">
@@ -602,11 +658,6 @@
 								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
 							on:click={() => {
 								activeTab = 'gradient';
-								// Set default gradient colors (blue to purple)
-								fromColor = colors[1]; // blue
-								toColor = colors[3]; // purple
-								selectedDirection = gradientDirections[0]; // left to right
-								updateGradient();
 							}}
 						>
 							Gradient
@@ -627,6 +678,15 @@
 							on:click={() => (activeTab = 'custom')}
 						>
 							Custom
+						</button>
+						<button
+							class="border-b px-1 py-1 text-xs font-medium transition-colors {activeTab ===
+							'background'
+								? 'border-blue-500 text-blue-600'
+								: 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}"
+							on:click={() => (activeTab = 'background')}
+						>
+							Background
 						</button>
 					</nav>
 				</div>
@@ -649,16 +709,60 @@
 				{:else if activeTab === 'custom'}
 					<!-- Custom Input -->
 					<div class="space-y-2">
-						<label class="block text-xs font-medium text-gray-700">Custom Classes</label>
+						<label class="block text-xs font-medium text-gray-700">Custom Color</label>
 						<input
 							type="text"
-							bind:value={$textClass}
+							bind:value={customColorInput}
+							on:input={(e) => updateTextColor(e.currentTarget.value)}
 							class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-							placeholder="Custom classes..."
+							placeholder="Enter hex color (#FF0000) or Tailwind class..."
 						/>
 						<p class="text-xs text-gray-500">
-							Enter custom Tailwind classes. Example: bg-gradient-to-r from-blue-500 to-purple-500
+							Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. text-blue-500)
 						</p>
+					</div>
+				{:else if activeTab === 'background'}
+					<!-- Background Color Selection -->
+					<div class="space-y-3">
+						<div>
+							<h3 class="mb-0.5 text-xs font-medium text-gray-700">Preset Colors</h3>
+							<div class="grid grid-cols-8 gap-0.5">
+								{#each backgroundColors as color}
+									<button
+										class="group relative aspect-square rounded border border-gray-200 p-[1px] shadow-sm hover:border-gray-300 hover:ring-1 hover:ring-blue-500 {backgroundClass ===
+										color.class
+											? 'ring-1 ring-blue-500'
+											: ''}"
+										on:click={() => {
+											// Clear any inline styles and custom input first
+											backgroundStyle = '';
+											const input = document.querySelector(
+												'input[placeholder*="hex color"]'
+											) as HTMLInputElement;
+											if (input) input.value = '';
+											// Then set the new color
+											backgroundClass = color.class;
+										}}
+									>
+										<div class="h-full w-full rounded {color.class}"></div>
+									</button>
+								{/each}
+							</div>
+						</div>
+
+						<div>
+							<h3 class="mb-0.5 text-xs font-medium text-gray-700">Custom Background</h3>
+							<input
+								type="text"
+								value={backgroundClass}
+								on:input={(e) => updateBackgroundColor(e.currentTarget.value)}
+								class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+								placeholder="Enter hex color (#FF0000) or Tailwind class..."
+							/>
+							<p class="text-xs text-gray-500">
+								Enter a hex color (e.g. #FF0000) or Tailwind class (e.g. bg-blue-500)
+							</p>
+						</div>
 					</div>
 				{:else}
 					<!-- Gradient Controls -->
