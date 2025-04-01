@@ -37,14 +37,14 @@
 	};
 
 	let keyframes = $state<Keyframe[]>([
-		{ value: 120, holdTime: 200, transitionDuration: 1000 }, // Start at max refresh rate with hold
-		{ value: 60, holdTime: 200, transitionDuration: 1500 }, // Significant slowdown with hold
-		{ value: 30, holdTime: 200, transitionDuration: 2500 }, // Further slowdown with hold
+		{ value: 120, holdTime: 200, transitionDuration: 500 }, // Start at max refresh rate with hold
+		{ value: 60, holdTime: 200, transitionDuration: 200 }, // Significant slowdown with hold
+		{ value: 30, holdTime: 200, transitionDuration: 1000 }, // Further slowdown with hold
 		{ value: 1, holdTime: 0, transitionDuration: 200 } // Final settling
 	]);
 
 	// Animation configuration
-	let easingFunction = $state('delayed'); // Changed from 'none' to 'delayed'
+	let easingFunction = $state('no animation'); // Changed from 'delayed' to 'no animation'
 
 	const colors = [
 		{ name: 'Red', class: 'text-red-500', bg: 'bg-red-500' },
@@ -75,7 +75,7 @@
 
 	// Easing functions
 	const easingFunctions: Record<string, (t: number) => number> = {
-		delayed: (t: number) => 0, // Stay at current value until time slot is complete
+		'no animation': (t: number) => 0, // Stay at current value until time slot is complete
 		linear: (t: number) => t,
 		easeIn: (t: number) => t * t,
 		easeOut: (t: number) => t * (2 - t),
@@ -152,7 +152,7 @@
 					return 0;
 				} else {
 					// We're in the transition phase
-					if (easingFunction === 'delayed') {
+					if (easingFunction === 'no animation') {
 						// Stay at current value until the full duration is over
 						return 0;
 					}
@@ -579,8 +579,8 @@
 						bind:value={easingFunction}
 						class="w-full rounded border border-gray-300 px-2 py-1 text-xs shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
 					>
-						<option value="delayed">Delayed (Show until next time slot)</option>
-						{#each Object.keys(easingFunctions).filter((key) => key !== 'delayed') as easing}
+						<option value="no animation">No Animation</option>
+						{#each Object.keys(easingFunctions).filter((key) => key !== 'no animation') as easing}
 							<option value={easing}>{easing}</option>
 						{/each}
 					</select>
